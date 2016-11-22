@@ -1,5 +1,13 @@
 all:
 
+FLAVOR = `uname -a | grep -i ubuntu`
+ifeq ($(FLAVO), "")
+	LIBRARY = /usr/lib64
+else
+	LIBRARY = /usr/lib/x86_64-linux-gnu
+endif
+
+
 MAKEFILE = Makefile
 SHELL = /bin/sh
 CC    = gcc
@@ -12,7 +20,7 @@ DEBUGFLAGS   = -O0 -D_DEBUG -D_REENTRANT
 RELEASEFLAGS = -03 -D_REENTRANT
 HEADERS      = /usr/include/qnio
 TEST_TARGET_DIR = /usr/local/bin
-LIBRARY      = /usr/lib64
+	
 
 OPTFLAGS     = $(DEBUGFLAGS)
 
@@ -51,7 +59,7 @@ clean:
 install: all
 	mkdir -p $(HEADERS) || exit
 	cp -f include/qnio_api.h $(HEADERS)/qnio_api.h
-	cp -f $(BASE_TARGET) $(LIBRARY)/$(BASE_TARGET)
+	cp -f $(BASE_TARGET) $(LIBRARY)/$(BASE_TARGET);	\
 	cp -f $(TEST_TARGET) ${TEST_TARGET_DIR}/$(TEST_TARGET)
 
 uninstall:
