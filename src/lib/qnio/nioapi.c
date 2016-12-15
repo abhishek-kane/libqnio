@@ -142,14 +142,13 @@ iio_open(void *ctx, const char *uri, uint32_t flags)
     nioDbg("iio_open: uri=%s, host=%s, port=%s\n", uri, host, port);
     err = qnio_create_channel(apictx->qnioctx, host, port);
     if (err == QNIO_ERR_SUCCESS) { 
-        cfd = ck_pr_faa_int(&(apictx->next_fd), 1);
-        safe_map_insert(&apictx->channels, cfd, strdup(host));
         nioDbg("New channel is ready %d", cfd);
     } else if (err == QNIO_ERR_CHAN_EXISTS) {
-        cfd = ck_pr_faa_int(&(apictx->next_fd), 1);
-        safe_map_insert(&apictx->channels, cfd, strdup(host));
         nioDbg("Existing channel is ready %d", cfd);
     }
+
+    cfd = ck_pr_faa_int(&(apictx->next_fd), 1);
+    safe_map_insert(&apictx->channels, cfd, strdup(host));
     return cfd;
 }
 

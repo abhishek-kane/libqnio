@@ -193,9 +193,18 @@ static void process_client_message(struct conn *conn)
     struct NSReadInfo *rinfo;
     struct qnio_msg *msg;
     struct iovec resp;
+    unsigned char crc = 0;
 
     rinfo = &conn->rinfo;
     msg = (struct qnio_msg *)rinfo->hinfo.cookie;
+    crc = (unsigned char )((uint64_t) msg % CRC_MODULO);
+    if (crc != msg->hinfo.crc) {
+        /* TODO: Is there any error handling required at caller? */
+        nioDbg("Invalid CRC for the msg recvd from wire on client side "
+                "msgid=%ld", (struct qnio_msg *)rinfo->hinfo.cookie);
+        return;
+    }
+
     nioDbg("Msg is recvd from wire on client side msgid=%ld", msg->hinfo.cookie);
     LIST_DEL(&msg->lnode);
     nioDbg("Msg removed from pending list msgid=%ld", msg->hinfo.cookie);
@@ -237,7 +246,8 @@ process_header(struct conn *conn)
     uint64_t aligned_size;
     int i;
     int err = QNIOERROR_SUCCESS;
-    
+    unsigned char crc = 0;
+
     channel = conn->channel;
     rinfo = &conn->rinfo;
     hinfo = &rinfo->hinfo;
@@ -256,6 +266,12 @@ process_header(struct conn *conn)
     }
     if (channel->flags & CHAN_CLIENT) {
         msg = (struct qnio_msg *)hinfo->cookie;
+        crc = (unsigned char )((uint64_t) msg % CRC_MODULO);
+        if (crc != hinfo->crc) {
+            nioDbg("Invalid CRC for the msg recvd msgid=%ld",
+                (struct qnio_msg *)hinfo.cookie);
+            return -1;
+        }
         if (msg->recv != NULL) {
             rinfo->buf_source = BUF_SRC_USER;
         } else {
